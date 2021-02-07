@@ -12,6 +12,8 @@ FPS = 60
 SPEED = 2
 PIPE_GAP_VERTICAL = 150
 PIPE_GAP_HORIZONTAL = 200
+GRAVITY = 0.2
+FLY_FORCE = 4
 
 pygame.display.set_caption('Bounce Birdy')
 
@@ -19,16 +21,19 @@ pygame.display.set_caption('Bounce Birdy')
 img_background = pygame.image.load('assets/background.png').convert()
 img_floor = pygame.image.load('assets/floor.png').convert()
 img_pipe = pygame.image.load('assets/pipe.png').convert_alpha()
-img_bird = pygame.image.load('assets/bird.png').convert()
+img_bird = pygame.image.load('assets/bird.png').convert_alpha()
 
 # top pipe is created by vertically flipping pipe
 img_pipe_top = pygame.transform.flip(img_pipe, False, True)
+
+img_bird_rect = img_bird.get_rect(center=(50, WINDOW_HEIGHT / 2))
 
 def main():
     clock = pygame.time.Clock()
 
     pipes = []
     floor_pos = 0
+    bird_velocity = 0
 
     # add one pipe when game starts
     pipes.extend(new_pipe(None))
@@ -41,6 +46,11 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    bird_velocity = 0
+                    bird_velocity -= FLY_FORCE
 
         for pipe in pipes:
             # add new pipes
@@ -55,9 +65,13 @@ def main():
             # move each  pipe to the left by the speed
             pipe.centerx -= SPEED
 
+        # move floor
         floor_pos -= 1
         if floor_pos <= -WINDOW_WIDTH:
             floor_pos = 0
+
+        bird_velocity += GRAVITY
+        img_bird_rect.centery += bird_velocity
 
         draw(pipes, floor_pos)
         
@@ -78,6 +92,9 @@ def draw(pipes, floor_pos):
     # draw floor
     WIN.blit(img_floor, (floor_pos, 500))
     WIN.blit(img_floor, (floor_pos + WINDOW_WIDTH, 500))
+
+    # draw bird
+    WIN.blit(img_bird, img_bird_rect)
 
 def new_pipe(last_pipe):
     heights = [220, 250, 300, 350, 400, 450, 480]
