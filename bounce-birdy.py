@@ -7,9 +7,9 @@ WINDOW_HEIGHT = 600
 pygame.init()
 
 WIN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-FPS = 30
+FPS = 60
 
-SPEED = 4
+SPEED = 2
 PIPE_GAP_VERTICAL = 150
 PIPE_GAP_HORIZONTAL = 200
 
@@ -42,12 +42,12 @@ def main():
                 run = False
 
         for pipe in pipes:
-            if pipe.right < WINDOW_WIDTH - 100 and len(pipes) <= 4:
+            if pipe.right < WINDOW_WIDTH - 100 and len(pipes) <= WINDOW_WIDTH / PIPE_GAP_HORIZONTAL: # window width / horizontal gap will give maximum number of pipes in list
                 pipes.extend(new_pipe(pipes[-1]))
             if pipe.right < 0:
                 pipes.pop(0)
                 pipes.pop(0)
-        print(len(pipes))
+
         draw(pipes)
         
         pygame.display.update()
@@ -64,10 +64,6 @@ def draw(pipes):
             WIN.blit(img_pipe_top, pipe)
 
         pipe.centerx -= SPEED
-
-        #if pipe.right < 0:
-            #pipe.right = pipes[-1].right + PIPE_GAP_HORIZONTAL
-            #pipes.append(pipes.pop())
 
 def new_pipe(last_pipe):
     heights = [250, 300, 350, 400, 450, 500]
