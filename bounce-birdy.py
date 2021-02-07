@@ -23,17 +23,24 @@ img_floor = pygame.image.load('assets/floor.png').convert()
 img_pipe = pygame.image.load('assets/pipe.png').convert_alpha()
 img_bird = pygame.image.load('assets/bird.png').convert_alpha()
 
+# scale assets to fit screen
+img_background = pygame.transform.scale(img_background, (WINDOW_WIDTH, WINDOW_HEIGHT))
+img_floor = pygame.transform.scale(img_floor, (WINDOW_WIDTH, WINDOW_HEIGHT // 6))
+img_pipe = pygame.transform.scale(img_pipe, (img_pipe.get_width(), WINDOW_HEIGHT - 200))
+
 # top pipe is created by vertically flipping pipe
 img_pipe_top = pygame.transform.flip(img_pipe, False, True)
-
-img_bird_rect = img_bird.get_rect(center=(50, WINDOW_HEIGHT / 2))
 
 def main():
     clock = pygame.time.Clock()
 
     pipes = []
-    floor_pos = 0
+    floor_x_pos = 0
+    floor_y_pos = WINDOW_HEIGHT - img_floor.get_height()
     bird_velocity = 0
+    game_running = True
+
+    img_bird_rect = img_bird.get_rect(center=(50, WINDOW_HEIGHT / 2))
 
     # add one pipe when game starts
     pipes.extend(new_pipe(None))
@@ -48,9 +55,15 @@ def main():
                 run = False
             
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE and game_running:
                     bird_velocity = 0
                     bird_velocity -= FLY_FORCE
+                if event.key == pygame.K_SPACE and not game_running:
+                    pipes = []
+                    pipes.extend(new_pipe(None))
+                    img_bird_rect.center = (50, WINDOW_HEIGHT / 2)
+                    bird_velocity = 0
+                    game_running = True
 
         for pipe in pipes:
             # add new pipes
@@ -66,20 +79,24 @@ def main():
             pipe.centerx -= SPEED
 
         # move floor
-        floor_pos -= 1
-        if floor_pos <= -WINDOW_WIDTH:
-            floor_pos = 0
+        floor_x_pos -= 1
+        if floor_x_pos <= -WINDOW_WIDTH:
+            floor_x_pos = 0
 
-        bird_velocity += GRAVITY
-        img_bird_rect.centery += bird_velocity
+        if game_running:
+            bird_velocity += GRAVITY
+            img_bird_rect.centery += bird_velocity
 
-        draw(pipes, floor_pos)
+            if bird_collide(img_bird_rect, pipes):
+                game_running = False
+
+        draw(pipes, (floor_x_pos, floor_y_pos), img_bird_rect)
         
         pygame.display.update()
 
     pygame.quit()
 
-def draw(pipes, floor_pos):
+def draw(pipes, floor_pos, img_bird_rect):
     WIN.blit(img_background, (0, 0))
 
     # draw pipes
@@ -90,8 +107,9 @@ def draw(pipes, floor_pos):
             WIN.blit(img_pipe_top, pipe)
 
     # draw floor
-    WIN.blit(img_floor, (floor_pos, 500))
-    WIN.blit(img_floor, (floor_pos + WINDOW_WIDTH, 500))
+    floor_x_pos, floor_y_pos = floor_pos
+    WIN.blit(img_floor, (floor_x_pos, floor_y_pos))
+    WIN.blit(img_floor, (floor_x_pos + WINDOW_WIDTH, floor_y_pos))
 
     # draw bird
     WIN.blit(img_bird, img_bird_rect)
@@ -110,6 +128,22 @@ def new_pipe(last_pipe):
     pipe_top = img_pipe.get_rect(midbottom=(pipe_x_pos, pipe_y_pos - PIPE_GAP_VERTICAL))
 
     return pipe_bottom, pipe_top
+
+def bird_collide(bird, pipes):
+    # check collision with top
+    if bird.top <= 0:
+        return True
+    
+    # check collision with bottom
+    if bird.bottom >= WINDOW_HEIGHT - img_floor.get_height():
+        return True
+    
+    # check collision with pipes
+    for pipe in pipes:
+        if bird.colliderect(pipe):
+            return True
+
+    return False
 
 if __name__ == '__main__':
     main()
