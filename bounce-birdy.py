@@ -83,6 +83,7 @@ def main():
         if floor_x_pos <= -WINDOW_WIDTH:
             floor_x_pos = 0
 
+        # bird
         if game_running:
             bird_velocity += GRAVITY
             img_bird_rect.centery += bird_velocity
